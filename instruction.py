@@ -10,14 +10,14 @@ class Instruction:
         if text == "BUBBLE":
             self.is_bubble = True
         elif text:
-            # Normalize commas and split
+            # Normalize commas and split into parts
             parts = text.replace(',', ' ').split()
             if not parts:
                 return
                 
             self.opcode = parts[0].upper()
             
-            # Parse based on opcode format
+            # Parse based on standard MIPS format
             if self.opcode in ['ADD', 'SUB']:
                 self.dest = parts[1]
                 self.srcs = [parts[2], parts[3]]

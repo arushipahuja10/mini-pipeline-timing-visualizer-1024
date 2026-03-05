@@ -12,8 +12,11 @@ class Pipeline:
         # Pipeline registers
         self.stages = {'IF': None, 'ID': None, 'EX': None, 'MEM': None, 'WB': None}
         
-        # grid[instruction_index] = list of stages per cycle (e.g., ['', 'IF', 'ID', 'STALL', 'EX'...])
+        # Grid holds the visualization data row-by-row
         self.grid = [[] for _ in self.instructions]
+        
+        # Logs track exactly why stalls happen
+        self.logs = [] 
 
     def is_empty(self):
         return all(inst is None for inst in self.stages.values()) and self.pc >= len(self.instructions)
@@ -26,7 +29,18 @@ class Pipeline:
 
         while not self.is_empty():
             self.cycles += 1
+            
+            # Check for hazards before moving instructions
             stall = detect_hazard(self.stages['ID'], self.stages['EX'], self.stages['MEM'], self.forwarding)
+
+            # --- Event Logging ---
+            id_inst = self.stages['ID']
+            if stall and id_inst:
+                if self.forwarding:
+                    self.logs.append(f"Cycle {self.cycles}: ⚠️ Load-Use Hazard! Stalled '{id_inst.text}' to wait for memory fetch.")
+                else:
+                    self.logs.append(f"Cycle {self.cycles}: 🛑 RAW Hazard! Stalled '{id_inst.text}' to wait for Write Back.")
+            # ---------------------
 
             # Record the state of each instruction for the current cycle
             for i, inst in enumerate(self.instructions):
@@ -36,16 +50,15 @@ class Pipeline:
                         current_stage = stage_name
                         break
                 
-                # If instruction is stuck in ID due to a stall, mark as STALL
+                # Logic to print STALL or repeat IF visually on the grid
                 if current_stage == 'ID' and len(self.grid[i]) > 0 and self.grid[i][-1] in ['ID', 'STALL']:
                     self.grid[i].append('STALL')
-                # If instruction is stuck in IF due to ID stall, just repeat IF
                 elif current_stage == 'IF' and len(self.grid[i]) > 0 and self.grid[i][-1] == 'IF':
                     self.grid[i].append('IF')
                 else:
                     self.grid[i].append(current_stage)
 
-            # Shift stages
+            # Shift stages (bottom-up to avoid overwriting)
             next_stages = {}
             next_stages['WB'] = self.stages['MEM']
             next_stages['MEM'] = self.stages['EX']
