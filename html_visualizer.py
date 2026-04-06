@@ -64,7 +64,7 @@ HTML_TEMPLATE = """
 
 <div class="container">
     <div class="header">
-        <h1>Architecture Lab: Pipeline Timing Visualizer</h1>
+        <h1>Pipeline Timing Visualizer</h1>
         <p style="color: #666; margin-top: -10px;">Diagnostic Tool for Structural, Data, and Control Hazards</p>
     </div>
 
